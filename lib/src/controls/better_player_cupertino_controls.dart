@@ -522,12 +522,15 @@ class _BetterPlayerCupertinoControlsState extends BetterPlayerControlsState<Bett
           else
             const SizedBox(),
           const Spacer(),
-          _buildAirPlayButton(
-            backgroundColor,
-            barHeight,
-            iconSize,
-            buttonPadding,
-          ),
+          if (_controlsConfiguration.enableCasting)
+            _buildAirPlayButton(
+              backgroundColor,
+              barHeight,
+              iconSize,
+              buttonPadding,
+            )
+          else
+            const SizedBox(),
           const SizedBox(width: 4),
           if (_controlsConfiguration.enableMute)
             _buildMuteButton(

@@ -76,8 +76,8 @@ class BetterPlayerControlsConfiguration {
   final Duration controlsHideTime;
 
   ///Parameter used to build custom controls
-  final Widget Function(BetterPlayerController controller,
-      Function(bool) onPlayerVisibilityChanged)? customControlsBuilder;
+  final Widget Function(BetterPlayerController controller, Function(bool) onPlayerVisibilityChanged)?
+      customControlsBuilder;
 
   ///Parameter used to change theme of the player
   final BetterPlayerTheme? playerTheme;
@@ -161,6 +161,8 @@ class BetterPlayerControlsConfiguration {
   ///Color of text in bottom modal sheet used for overflow menu items.
   final Color overflowModalTextColor;
 
+  final bool enableCasting;
+
   const BetterPlayerControlsConfiguration({
     this.controlBarColor = Colors.black87,
     this.textColor = Colors.white,
@@ -213,6 +215,7 @@ class BetterPlayerControlsConfiguration {
     this.backgroundColor = Colors.black,
     this.overflowModalColor = Colors.white,
     this.overflowModalTextColor = Colors.black,
+    this.enableCasting = true,
   });
 
   factory BetterPlayerControlsConfiguration.white() {
