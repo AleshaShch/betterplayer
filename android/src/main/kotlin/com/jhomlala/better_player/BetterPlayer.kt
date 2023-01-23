@@ -25,6 +25,8 @@ import androidx.work.WorkManager
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.drm.*
+import com.google.android.exoplayer2.ext.cast.CastPlayer
+import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ClippingMediaSource
@@ -44,6 +46,12 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.util.Util
+import com.google.android.gms.cast.MediaInfo
+import com.google.android.gms.cast.MediaLoadOptions
+import com.google.android.gms.cast.MediaSeekOptions
+import com.google.android.gms.cast.framework.CastContext
+import com.google.android.gms.cast.framework.media.RemoteMediaClient
+import com.google.android.gms.common.api.PendingResult
 import com.jhomlala.better_player.DataSourceUtils.getDataSourceFactory
 import com.jhomlala.better_player.DataSourceUtils.getUserAgent
 import com.jhomlala.better_player.DataSourceUtils.isHTTP
@@ -56,8 +64,10 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
+
 internal class BetterPlayer(
     context: Context,
+    castContext: CastContext,
     private val eventChannel: EventChannel,
     private val textureEntry: SurfaceTextureEntry,
     customDefaultLoadControl: CustomDefaultLoadControl?,
@@ -117,6 +127,40 @@ internal class BetterPlayer(
         cacheKey: String?,
         clearKey: String?
     ) {
+
+        Log.d(TAG, "Cast player init")
+        val castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
+        castPlayer.setSessionAvailabilityListener(object : SessionAvailabilityListener {
+            override fun onCastSessionAvailable() {
+                Log.d(TAG, "Cast session available")
+            }
+
+            override fun onCastSessionUnavailable() {
+                Log.d(TAG, "Cast session unavailable")
+            }
+        })
+        Log.d(TAG, "Cast session available?" + castPlayer.isCastSessionAvailable)
+        if (castPlayer.isCastSessionAvailable) {
+            /* MediaMetadata metadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
+             metadata.putString(MediaMetadata.KEY_TITLE, "Title");
+             metadata.putString(MediaMetadata.KEY_SUBTITLE, "Subtitle");
+
+
+             MediaInfo mediaInfo = new MediaInfo.Builder(dataSource)
+                     .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                     .setContentType(MimeTypes.VIDEO_MP4)
+                     .setMetadata(metadata)
+                     .build();
+             MediaQueueItem mediaItem =new  MediaQueueItem.Builder(mediaInfo).build();
+             castPlayer.loadItem()
+             castPlayer?.loadItem(mediaItem, playbackPosition)*/
+            Log.d(TAG, "LOADING VIDEO!!!")
+            val media = MediaInfo.Builder(dataSource!!).build()
+            val options = MediaLoadOptions.Builder().build()
+            val request: PendingResult<RemoteMediaClient.MediaChannelResult> = CastContext.getSharedInstance()!!.sessionManager.currentCastSession!!.remoteMediaClient!!.load(media, options)
+            request.addStatusListener { status -> Log.d(TAG, "STATUS LISTENER: $status") }
+        }
+
         this.key = key
         isInitialized = false
         val uri = Uri.parse(dataSource)
@@ -516,10 +560,12 @@ internal class BetterPlayer(
 
     fun play() {
         exoPlayer?.playWhenReady = true
+        CastContext.getSharedInstance()?.sessionManager?.currentCastSession?.remoteMediaClient?.play()
     }
 
     fun pause() {
         exoPlayer?.playWhenReady = false
+        CastContext.getSharedInstance()?.sessionManager?.currentCastSession?.remoteMediaClient?.pause()
     }
 
     fun setLooping(value: Boolean) {
@@ -555,6 +601,8 @@ internal class BetterPlayer(
 
     fun seekTo(location: Int) {
         exoPlayer?.seekTo(location.toLong())
+        val mediaSeekOptions = MediaSeekOptions.Builder().setPosition(location.toLong()).build()
+        CastContext.getSharedInstance()?.sessionManager?.currentCastSession?.remoteMediaClient?.seek(mediaSeekOptions)
     }
 
     val position: Long

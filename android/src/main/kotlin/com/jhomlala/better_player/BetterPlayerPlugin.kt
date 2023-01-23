@@ -12,20 +12,20 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.util.LongSparseArray
+import com.google.android.gms.cast.framework.CastContext
 import com.jhomlala.better_player.BetterPlayerCache.releaseCache
-import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.embedding.engine.plugins.activity.ActivityAware
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.loader.FlutterLoader
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.EventChannel
+import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.view.TextureRegistry
-import java.lang.Exception
-import java.util.HashMap
+
 
 /**
  * Android platform implementation of the VideoPlayerPlugin.
@@ -39,8 +39,16 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
+    private var chromeCastFactory: ChromeCastFactory? = null
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
+        Log.d(TAG,"ATTACHED TO ENGINE!");
         val loader = FlutterLoader()
+        var castContext: CastContext? = null
+        try {
+            castContext = CastContext.getSharedInstance(binding.applicationContext)
+            Log.d(TAG, "GOT CAST CONTEXT")
+        } catch (_: RuntimeException) { }
+
         flutterState = FlutterState(
             binding.applicationContext,
             binding.binaryMessenger, object : KeyForAssetFn {
@@ -57,9 +65,18 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                     )
                 }
             },
-            binding.textureRegistry
+            binding.textureRegistry,
+                castContext,
         )
         flutterState?.startListening(this)
+
+        chromeCastFactory = ChromeCastFactory(binding.binaryMessenger);
+        binding
+                .platformViewRegistry
+                .registerViewFactory(
+                        "ChromeCastButton",
+                        chromeCastFactory!!
+                )
     }
 
 
@@ -75,6 +92,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
+        chromeCastFactory?.activity = activity
     }
 
     override fun onDetachedFromActivityForConfigChanges() {}
@@ -116,8 +134,12 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                     )
                 }
                 val player = BetterPlayer(
-                    flutterState?.applicationContext!!, eventChannel, handle,
-                    customDefaultLoadControl, result
+                    flutterState?.applicationContext!!,
+                    flutterState?.castContext!!,
+                    eventChannel,
+                    handle,
+                    customDefaultLoadControl,
+                    result
                 )
                 videoPlayers.put(handle.id(), player)
             }
@@ -466,7 +488,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         val binaryMessenger: BinaryMessenger,
         val keyForAsset: KeyForAssetFn,
         val keyForAssetAndPackageName: KeyForAssetAndPackageName,
-        val textureRegistry: TextureRegistry?
+        val textureRegistry: TextureRegistry?,
+        val castContext: CastContext?
     ) {
         private val methodChannel: MethodChannel = MethodChannel(binaryMessenger, CHANNEL)
 
