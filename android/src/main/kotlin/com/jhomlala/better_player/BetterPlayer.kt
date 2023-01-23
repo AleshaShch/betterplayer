@@ -108,6 +108,7 @@ internal class BetterPlayer(
             .build()
         workManager = WorkManager.getInstance(context)
         workerObserverMap = HashMap()
+        castPlayer = CastPlayer(CastContext.getSharedInstance()!!);
         setupVideoPlayer(eventChannel, textureEntry, result)
     }
 
@@ -492,7 +493,13 @@ internal class BetterPlayer(
             }
         })
 
-        castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
+        val reply: MutableMap<String, Any> = HashMap()
+        reply["textureId"] = textureEntry.id()
+        result.success(reply)
+    }
+
+    fun startCast() {
+        Log.d("BetterPlayer", "start cast");
         castPlayer!!.setSessionAvailabilityListener(object : SessionAvailabilityListener {
             override fun onCastSessionAvailable() {
                 Log.d(TAG, "SESSION AVAILABLE!")
@@ -508,10 +515,10 @@ internal class BetterPlayer(
                 eventSink.success(event)
             }
         })
+    }
 
-        val reply: MutableMap<String, Any> = HashMap()
-        reply["textureId"] = textureEntry.id()
-        result.success(reply)
+    fun stopCast() {
+        castPlayer?.setSessionAvailabilityListener(null)
     }
 
     fun sendBufferingUpdate(isFromBufferingStart: Boolean) {
@@ -793,7 +800,12 @@ internal class BetterPlayer(
         eventChannel.setStreamHandler(null)
         surface?.release()
         exoPlayer?.release()
-        disableCast();
+        disableCast()
+        if (castPlayer != null) {
+            Log.d(TAG,"!!!!!!!!!Cast player released");
+            castPlayer?.release();
+            castPlayer = null;
+        }
     }
 
     fun enableCast(uri: String?) {
@@ -804,12 +816,18 @@ internal class BetterPlayer(
             request.addStatusListener { status ->
                 if (status.isSuccess) {
                     castPlayerSeekTo(position.toInt())
+                    if (exoPlayer!!.isPlaying){
+                        castPlayer?.play();
+                    } else {
+                        castPlayer?.pause();
+                    }
                 }
             }
         }
     }
 
     fun disableCast() {
+        startCast();
         CastContext.getSharedInstance()!!.sessionManager.endCurrentSession(true)
     }
 

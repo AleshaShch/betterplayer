@@ -95,7 +95,6 @@ class ChromeCastController(
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when(call.method) {
-            "chromeCast#wait" -> result.success(null)
             "chromeCast#loadMedia" -> {
                 loadMedia(call.arguments)
                 result.success(null)

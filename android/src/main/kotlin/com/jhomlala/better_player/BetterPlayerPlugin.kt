@@ -12,7 +12,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.util.LongSparseArray
-import com.google.android.gms.cast.framework.CastContext
 import com.jhomlala.better_player.BetterPlayerCache.releaseCache
 import io.flutter.embedding.engine.loader.FlutterLoader
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -25,7 +24,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.view.TextureRegistry
-import java.util.Objects
 
 
 /**
@@ -156,6 +154,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         }
     }
 
+    private var castPlayer: BetterPlayer? = null
+
     private fun onMethodCall(
         call: MethodCall,
         result: MethodChannel.Result,
@@ -245,6 +245,13 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             "disableCast" -> {
                 player.disableCast();
                 result.success(null);
+            }
+            "startCast" -> {
+                Log.d("BetterPlayerPlugin","onMethodCall start call");
+                castPlayer?.stopCast()
+                castPlayer = player
+                player.startCast()
+                result.success(null)
             }
             else -> result.notImplemented()
         }

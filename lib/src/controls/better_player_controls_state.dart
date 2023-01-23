@@ -73,17 +73,13 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget> extends State
                   onButtonCreated: (controller) {
                     print("ON button created!");
                     chromeCastController = controller;
-                    controller.addSessionListener();
                   },
                 ),
                 BetterPlayerMaterialClickableWidget(
                   onTap: () {
                     print("CLICKED ON CAST");
+                    betterPlayerController?.onCastClicked();
                     chromeCastController.click();
-                    Future.delayed(Duration(seconds: 10), () {
-                      print("Enable cast.....");
-                      //betterPlayerController?.enableCast();
-                    });
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8),

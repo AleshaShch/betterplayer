@@ -871,6 +871,11 @@ class BetterPlayerController {
       return;
     }
     _postEvent(BetterPlayerEvent(BetterPlayerEventType.changedPlayerVisibility));
+    if (_wasInCastMode) {
+      print("Disabled cast because is no longer visible!!");
+      disableCast();
+      _wasInCastMode = false;
+    }
 
     if (_isAutomaticPlayPauseHandled()) {
       if (betterPlayerConfiguration.playerVisibilityChangedBehavior != null) {
@@ -1199,6 +1204,10 @@ class BetterPlayerController {
 
   void disableCast() async {
     return videoPlayerController?.disableCast();
+  }
+
+  void onCastClicked() {
+    return videoPlayerController?.startCast();
   }
 
   Widget? buildAirPlayButton() {
