@@ -67,7 +67,9 @@ class ChromeCastButton extends StatelessWidget {
   }
 
   Future<void> _onPlatformViewCreated(int id) async {
+    print("On platform view created!");
     final ChromeCastController controller = await ChromeCastController.init(id);
+    print("Init completed!!!!");
     if (onButtonCreated != null) {
       onButtonCreated?.call(controller);
     }
@@ -97,8 +99,8 @@ class ChromeCastController {
 
   /// Initialize control of a [ChromeCastButton] with [id].
   static Future<ChromeCastController> init(int id) async {
-    assert(id != null);
     await _chromeCastPlatform.init(id);
+    print("Done!!!");
     return ChromeCastController._(id: id);
   }
 
@@ -147,6 +149,10 @@ class ChromeCastController {
   /// Returns `true` when a cast session is playing, `false` otherwise.
   Future<bool> isPlaying() {
     return _chromeCastPlatform.isPlaying(id: id);
+  }
+
+  Future<void> click() {
+    return _chromeCastPlatform.click(id: id);
   }
 }
 
@@ -236,6 +242,11 @@ abstract class ChromeCastPlatform {
     throw UnimplementedError('isPlaying() has not been implemented.');
   }
 
+  /// Stop the current video.
+  Future<void> click({@required int? id}) {
+    throw UnimplementedError('click() has not been implemented.');
+  }
+
   /// Returns a widget displaying the button.
   Widget buildView(Map<String, dynamic> arguments, PlatformViewCreatedCallback onPlatformViewCreated) {
     throw UnimplementedError('buildView() has not been implemented.');
@@ -250,7 +261,7 @@ class MethodChannelChromeCast extends ChromeCastPlatform {
 
   /// Accesses the MethodChannel associated to the passed id.
   MethodChannel channel(int? id) {
-    return _channels![id]!;
+    return _channels[id]!;
   }
 
   // The controller we need to broadcast the different events coming
@@ -339,6 +350,11 @@ class MethodChannelChromeCast extends ChromeCastPlatform {
   @override
   Future<bool> isPlaying({@required int? id}) {
     return channel(id!).invokeMethod<bool>('chromeCast#isPlaying') as Future<bool>;
+  }
+
+  @override
+  Future<void> click({int? id}) {
+    return channel(id).invokeMethod<void>('chromeCast#click');
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call, int id) async {

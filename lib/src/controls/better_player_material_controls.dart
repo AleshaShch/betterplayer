@@ -187,6 +187,7 @@ class _BetterPlayerMaterialControlsState extends BetterPlayerControlsState<Bette
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    buildCastWidget(controlsNotVisible),
                     if (_controlsConfiguration.enablePip)
                       _buildPipButtonWrapperWidget(controlsNotVisible, _onPlayerHide)
                     else

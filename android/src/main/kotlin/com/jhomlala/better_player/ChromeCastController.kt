@@ -2,6 +2,9 @@ package com.jhomlala.better_player
 
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.mediarouter.app.MediaRouteButton
 import com.google.android.gms.cast.MediaInfo
@@ -22,9 +25,10 @@ class ChromeCastController(
         viewId: Int,
         context: Context?
 ) : PlatformView, MethodChannel.MethodCallHandler, SessionManagerListener<Session>, PendingResult.StatusListener {
+    // TODO: setRemoteIndicatorDrawable
     private val channel = MethodChannel(messenger, "flutter_video_cast/chromeCast_$viewId")
     private val chromeCastButton = MediaRouteButton(ContextThemeWrapper(context, R.style.Theme_AppCompat_NoActionBar))
-    private val sessionManager = CastContext.getSharedInstance()?.sessionManager
+    private val sessionManager =  CastContext.getSharedInstance()!!.sessionManager;
 
     init {
         CastButtonFactory.setUpMediaRouteButton(context!!, chromeCastButton)
@@ -121,6 +125,11 @@ class ChromeCastController(
             "chromeCast#removeSessionListener" -> {
                 removeSessionListener()
                 result.success(null)
+            }
+            "chromeCast#click" -> {
+                Log.d("ChromeCast", "CLICK CALLED");
+                chromeCastButton.performClick();
+                result.success(null);
             }
         }
     }

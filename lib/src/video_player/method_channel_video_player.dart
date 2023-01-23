@@ -401,6 +401,17 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
             eventType: VideoEventType.pipStop,
             key: key,
           );
+        case 'castSessionAvailable':
+          return VideoEvent(
+            eventType: VideoEventType.castSessionAvailable,
+            key: key,
+          );
+
+        case 'castSessionUnavailable':
+          return VideoEvent(
+            eventType: VideoEventType.castSessionUnavailable,
+            key: key,
+          );
 
         default:
           return VideoEvent(
@@ -422,6 +433,26 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
     } else {
       return Texture(textureId: textureId!);
     }
+  }
+
+  @override
+  Future<void> enableCast(int? textureId) {
+    return _channel.invokeMethod<void>(
+      'enableCast',
+      <String, dynamic>{
+        'textureId': textureId,
+      },
+    );
+  }
+
+  @override
+  Future<void> disableCast(int? textureId) {
+    return _channel.invokeMethod<void>(
+      'disableCast',
+      <String, dynamic>{
+        'textureId': textureId,
+      },
+    );
   }
 
   @override

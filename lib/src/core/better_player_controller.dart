@@ -197,6 +197,8 @@ class BetterPlayerController {
   ///Currently displayed [BetterPlayerSubtitle].
   BetterPlayerSubtitle? renderedSubtitle;
 
+  bool _wasInCastMode = false;
+
   BetterPlayerController(
     this.betterPlayerConfiguration, {
     this.betterPlayerPlaylistConfiguration,
@@ -732,6 +734,12 @@ class BetterPlayerController {
         setControlsEnabled(true);
       }
       videoPlayerController?.refresh();
+    } else if (currentVideoPlayerValue.isCastSessionAvailable && !_wasInCastMode) {
+      _wasInCastMode = true;
+      videoPlayerController?.enableCast();
+    } else if (!currentVideoPlayerValue.isCastSessionAvailable && _wasInCastMode) {
+      _wasInCastMode = false;
+      videoPlayerController?.disableCast();
     }
 
     if (_betterPlayerSubtitlesSource?.asmsIsSegmented == true) {
@@ -1183,6 +1191,14 @@ class BetterPlayerController {
   Future<void> stopPreCache(BetterPlayerDataSource betterPlayerDataSource) async {
     return VideoPlayerController?.stopPreCache(
         betterPlayerDataSource.url, betterPlayerDataSource.cacheConfiguration?.key);
+  }
+
+  void enableCast() async {
+    return videoPlayerController?.enableCast();
+  }
+
+  void disableCast() async {
+    return videoPlayerController?.disableCast();
   }
 
   Widget? buildAirPlayButton() {

@@ -25,6 +25,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.view.TextureRegistry
+import java.util.Objects
 
 
 /**
@@ -43,11 +44,6 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         Log.d(TAG,"ATTACHED TO ENGINE!");
         val loader = FlutterLoader()
-        var castContext: CastContext? = null
-        try {
-            castContext = CastContext.getSharedInstance(binding.applicationContext)
-            Log.d(TAG, "GOT CAST CONTEXT")
-        } catch (_: RuntimeException) { }
 
         flutterState = FlutterState(
             binding.applicationContext,
@@ -66,7 +62,6 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 }
             },
             binding.textureRegistry,
-                castContext,
         )
         flutterState?.startListening(this)
 
@@ -135,7 +130,6 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 }
                 val player = BetterPlayer(
                     flutterState?.applicationContext!!,
-                    flutterState?.castContext!!,
                     eventChannel,
                     handle,
                     customDefaultLoadControl,
@@ -241,6 +235,16 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             DISPOSE_METHOD -> {
                 dispose(player, textureId)
                 result.success(null)
+            }
+            "enableCast" -> {
+                val dataSource = dataSources.get(textureId);
+                val uri = getParameter (dataSource, URI_PARAMETER, "");
+                player.enableCast(uri);
+                result.success(null);
+            }
+            "disableCast" -> {
+                player.disableCast();
+                result.success(null);
             }
             else -> result.notImplemented()
         }
@@ -488,8 +492,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         val binaryMessenger: BinaryMessenger,
         val keyForAsset: KeyForAssetFn,
         val keyForAssetAndPackageName: KeyForAssetAndPackageName,
-        val textureRegistry: TextureRegistry?,
-        val castContext: CastContext?
+        val textureRegistry: TextureRegistry?
     ) {
         private val methodChannel: MethodChannel = MethodChannel(binaryMessenger, CHANNEL)
 

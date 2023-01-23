@@ -169,6 +169,14 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('buildAirPlayButtonView() has not been implemented.');
   }
 
+  Future<void> enableCast(int? textureId) {
+    throw UnimplementedError('enableCast() has not been implemented.');
+  }
+
+  Future<void> disableCast(int? textureId) {
+    throw UnimplementedError('disableCast() has not been implemented.');
+  }
+
   // This method makes sure that VideoPlayer isn't implemented with `implements`.
   //
   // See class docs for more details on why implementing this class is forbidden.
@@ -454,6 +462,10 @@ enum VideoEventType {
 
   /// Picture in picture mode has been dismissed
   pipStop,
+
+  castSessionAvailable,
+
+  castSessionUnavailable,
 
   /// An unknown event has been received.
   unknown,

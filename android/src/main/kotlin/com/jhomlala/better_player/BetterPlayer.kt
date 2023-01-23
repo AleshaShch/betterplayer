@@ -67,7 +67,6 @@ import kotlin.math.min
 
 internal class BetterPlayer(
     context: Context,
-    castContext: CastContext,
     private val eventChannel: EventChannel,
     private val textureEntry: SurfaceTextureEntry,
     customDefaultLoadControl: CustomDefaultLoadControl?,
@@ -92,6 +91,7 @@ internal class BetterPlayer(
     private val customDefaultLoadControl: CustomDefaultLoadControl =
         customDefaultLoadControl ?: CustomDefaultLoadControl()
     private var lastSendBufferedPosition = 0L
+    private var castPlayer: CastPlayer? = null
 
     init {
         val loadBuilder = DefaultLoadControl.Builder()
@@ -127,39 +127,6 @@ internal class BetterPlayer(
         cacheKey: String?,
         clearKey: String?
     ) {
-
-        Log.d(TAG, "Cast player init")
-        val castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
-        castPlayer.setSessionAvailabilityListener(object : SessionAvailabilityListener {
-            override fun onCastSessionAvailable() {
-                Log.d(TAG, "Cast session available")
-            }
-
-            override fun onCastSessionUnavailable() {
-                Log.d(TAG, "Cast session unavailable")
-            }
-        })
-        Log.d(TAG, "Cast session available?" + castPlayer.isCastSessionAvailable)
-        if (castPlayer.isCastSessionAvailable) {
-            /* MediaMetadata metadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
-             metadata.putString(MediaMetadata.KEY_TITLE, "Title");
-             metadata.putString(MediaMetadata.KEY_SUBTITLE, "Subtitle");
-
-
-             MediaInfo mediaInfo = new MediaInfo.Builder(dataSource)
-                     .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                     .setContentType(MimeTypes.VIDEO_MP4)
-                     .setMetadata(metadata)
-                     .build();
-             MediaQueueItem mediaItem =new  MediaQueueItem.Builder(mediaInfo).build();
-             castPlayer.loadItem()
-             castPlayer?.loadItem(mediaItem, playbackPosition)*/
-            Log.d(TAG, "LOADING VIDEO!!!")
-            val media = MediaInfo.Builder(dataSource!!).build()
-            val options = MediaLoadOptions.Builder().build()
-            val request: PendingResult<RemoteMediaClient.MediaChannelResult> = CastContext.getSharedInstance()!!.sessionManager.currentCastSession!!.remoteMediaClient!!.load(media, options)
-            request.addStatusListener { status -> Log.d(TAG, "STATUS LISTENER: $status") }
-        }
 
         this.key = key
         isInitialized = false
@@ -524,6 +491,24 @@ internal class BetterPlayer(
                 eventSink.error("VideoError", "Video player had error $error", "")
             }
         })
+
+        castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
+        castPlayer!!.setSessionAvailabilityListener(object : SessionAvailabilityListener {
+            override fun onCastSessionAvailable() {
+                Log.d(TAG, "SESSION AVAILABLE!")
+                val event: MutableMap<String, Any> = HashMap()
+                event["event"] = "castSessionAvailable"
+                eventSink.success(event)
+            }
+
+            override fun onCastSessionUnavailable() {
+                Log.d(TAG, "SESSION UNAVAILABLE!")
+                val event: MutableMap<String, Any> = HashMap()
+                event["event"] = "castSessionUnavailable"
+                eventSink.success(event)
+            }
+        })
+
         val reply: MutableMap<String, Any> = HashMap()
         reply["textureId"] = textureEntry.id()
         result.success(reply)
@@ -558,14 +543,34 @@ internal class BetterPlayer(
         }
     }
 
+    private fun getCastRemoteMediaClient(): RemoteMediaClient? {
+        return if (CastContext.getSharedInstance()!!.sessionManager.currentCastSession != null) {
+            CastContext
+                    .getSharedInstance()
+                    ?.sessionManager
+                    ?.currentCastSession
+                    ?.remoteMediaClient
+        } else {
+            null
+        }
+    }
+
     fun play() {
         exoPlayer?.playWhenReady = true
-        CastContext.getSharedInstance()?.sessionManager?.currentCastSession?.remoteMediaClient?.play()
+        val remoteMediaClient = getCastRemoteMediaClient()
+        if (remoteMediaClient != null) {
+            castPlayerSeekTo(position.toInt())
+            remoteMediaClient.play()
+        }
     }
 
     fun pause() {
         exoPlayer?.playWhenReady = false
-        CastContext.getSharedInstance()?.sessionManager?.currentCastSession?.remoteMediaClient?.pause()
+        val remoteMediaClient = getCastRemoteMediaClient()
+        if (remoteMediaClient != null) {
+            castPlayerSeekTo(position.toInt())
+            remoteMediaClient.pause()
+        }
     }
 
     fun setLooping(value: Boolean) {
@@ -601,8 +606,15 @@ internal class BetterPlayer(
 
     fun seekTo(location: Int) {
         exoPlayer?.seekTo(location.toLong())
-        val mediaSeekOptions = MediaSeekOptions.Builder().setPosition(location.toLong()).build()
-        CastContext.getSharedInstance()?.sessionManager?.currentCastSession?.remoteMediaClient?.seek(mediaSeekOptions)
+        castPlayerSeekTo(location);
+    }
+
+    private fun castPlayerSeekTo(location: Int) {
+        val remoteMediaClient = getCastRemoteMediaClient()
+        if (remoteMediaClient != null) {
+            val mediaSeekOptions = MediaSeekOptions.Builder().setPosition(location.toLong()).build()
+            remoteMediaClient.seek(mediaSeekOptions)
+        }
     }
 
     val position: Long
@@ -781,6 +793,24 @@ internal class BetterPlayer(
         eventChannel.setStreamHandler(null)
         surface?.release()
         exoPlayer?.release()
+        disableCast();
+    }
+
+    fun enableCast(uri: String?) {
+        if (castPlayer!!.isCastSessionAvailable) {
+            val media = MediaInfo.Builder(uri!!).build()
+            val options = MediaLoadOptions.Builder().build()
+            val request: PendingResult<RemoteMediaClient.MediaChannelResult> = CastContext.getSharedInstance()!!.sessionManager.currentCastSession!!.remoteMediaClient!!.load(media, options)
+            request.addStatusListener { status ->
+                if (status.isSuccess) {
+                    castPlayerSeekTo(position.toInt())
+                }
+            }
+        }
+    }
+
+    fun disableCast() {
+        CastContext.getSharedInstance()!!.sessionManager.endCurrentSession(true)
     }
 
     override fun equals(other: Any?): Boolean {
