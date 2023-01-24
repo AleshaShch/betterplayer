@@ -177,7 +177,7 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('disableCast() has not been implemented.');
   }
 
-  Future<void> startCast(int? textureId) {
+  Future<void> startCast() {
     throw UnimplementedError('startCast() has not been implemented.');
   }
 

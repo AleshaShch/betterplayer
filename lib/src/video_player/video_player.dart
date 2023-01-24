@@ -648,7 +648,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   void startCast() async {
-    return _videoPlayerPlatform.startCast(_textureId);
+    return _videoPlayerPlatform.startCast();
   }
 
   Widget buildAirPlayButton() {
