@@ -10,25 +10,17 @@ import 'package:flutter/services.dart';
 /// when the button is created.
 typedef void OnButtonCreated(ChromeCastController controller);
 
-/// Callback method for when a request has failed.
-typedef void OnRequestFailed(String error);
-
 /// Widget that displays the ChromeCast button.
 class ChromeCastButton extends StatelessWidget {
   /// Creates a widget displaying a ChromeCast button.
   ChromeCastButton({
     Key? key,
     this.size = 30.0,
-    this.color = Colors.black,
     this.onButtonCreated,
   }) : super(key: key);
 
   /// The size of the button.
   final double size;
-
-  /// The color of the button.
-  /// This is only supported on iOS at the moment.
-  final Color color;
 
   /// Callback method for when the button is ready to be used.
   ///
@@ -37,16 +29,10 @@ class ChromeCastButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> args = <String, dynamic>{
-      'red': color.red,
-      'green': color.green,
-      'blue': color.blue,
-      'alpha': color.alpha
-    };
     return SizedBox(
       width: size,
       height: size,
-      child: _chromeCastPlatform.buildView(args, _onPlatformViewCreated),
+      child: _chromeCastPlatform.buildView(_onPlatformViewCreated),
     );
   }
 
@@ -103,7 +89,7 @@ abstract class ChromeCastPlatform {
   }
 
   /// Returns a widget displaying the button.
-  Widget buildView(Map<String, dynamic> arguments, PlatformViewCreatedCallback onPlatformViewCreated) {
+  Widget buildView(PlatformViewCreatedCallback onPlatformViewCreated) {
     throw UnimplementedError('buildView() has not been implemented.');
   }
 }
@@ -135,12 +121,11 @@ class MethodChannelChromeCast extends ChromeCastPlatform {
   }
 
   @override
-  Widget buildView(Map<String, dynamic> arguments, PlatformViewCreatedCallback onPlatformViewCreated) {
+  Widget buildView(PlatformViewCreatedCallback onPlatformViewCreated) {
     if (Platform.isAndroid) {
       return AndroidView(
         viewType: 'ChromeCastButton',
         onPlatformViewCreated: onPlatformViewCreated,
-        creationParams: arguments,
         creationParamsCodec: const StandardMessageCodec(),
       );
     }

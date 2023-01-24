@@ -71,24 +71,10 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget> extends State
               children: [
                 ChromeCastButton(
                   onButtonCreated: (controller) {
-                    print("ON button created!");
                     chromeCastController = controller;
+                    betterPlayerController?.onCastClicked();
                   },
                 ),
-                BetterPlayerMaterialClickableWidget(
-                  onTap: () {
-                    print("CLICKED ON CAST");
-                    betterPlayerController?.onCastClicked();
-                    chromeCastController.click();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.cast,
-                      color: betterPlayerControlsConfiguration.iconsColor,
-                    ),
-                  ),
-                )
               ],
             )
           ],
