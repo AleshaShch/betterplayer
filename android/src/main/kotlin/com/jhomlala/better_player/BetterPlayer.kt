@@ -499,17 +499,14 @@ internal class BetterPlayer(
     }
 
     fun startCast() {
-        Log.d("BetterPlayer", "start cast");
         castPlayer!!.setSessionAvailabilityListener(object : SessionAvailabilityListener {
             override fun onCastSessionAvailable() {
-                Log.d(TAG, "SESSION AVAILABLE!")
                 val event: MutableMap<String, Any> = HashMap()
                 event["event"] = "castSessionAvailable"
                 eventSink.success(event)
             }
 
             override fun onCastSessionUnavailable() {
-                Log.d(TAG, "SESSION UNAVAILABLE!")
                 val event: MutableMap<String, Any> = HashMap()
                 event["event"] = "castSessionUnavailable"
                 eventSink.success(event)
@@ -564,10 +561,10 @@ internal class BetterPlayer(
 
     fun play() {
         exoPlayer?.playWhenReady = true
-        val remoteMediaClient = getCastRemoteMediaClient()
-        if (remoteMediaClient != null) {
+        if (castPlayer!!.isCastSessionAvailable) {
+            val remoteMediaClient = getCastRemoteMediaClient()
             castPlayerSeekTo(position.toInt())
-            remoteMediaClient.play()
+            remoteMediaClient?.play()
         }
     }
 
@@ -800,12 +797,6 @@ internal class BetterPlayer(
         eventChannel.setStreamHandler(null)
         surface?.release()
         exoPlayer?.release()
-        disableCast()
-        if (castPlayer != null) {
-            Log.d(TAG,"!!!!!!!!!Cast player released");
-            castPlayer?.release();
-            castPlayer = null;
-        }
     }
 
     fun enableCast(uri: String?) {
@@ -827,7 +818,6 @@ internal class BetterPlayer(
     }
 
     fun disableCast() {
-        startCast();
         CastContext.getSharedInstance()!!.sessionManager.endCurrentSession(true)
     }
 

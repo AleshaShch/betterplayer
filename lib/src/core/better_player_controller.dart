@@ -737,9 +737,11 @@ class BetterPlayerController {
     } else if (currentVideoPlayerValue.isCastSessionAvailable && !_wasInCastMode) {
       _wasInCastMode = true;
       videoPlayerController?.enableCast();
+      _postEvent(BetterPlayerEvent(BetterPlayerEventType.chromecastSessionStart));
     } else if (!currentVideoPlayerValue.isCastSessionAvailable && _wasInCastMode) {
       _wasInCastMode = false;
       videoPlayerController?.disableCast();
+      _postEvent(BetterPlayerEvent(BetterPlayerEventType.chromecastSessionEnd));
     }
 
     if (_betterPlayerSubtitlesSource?.asmsIsSegmented == true) {
