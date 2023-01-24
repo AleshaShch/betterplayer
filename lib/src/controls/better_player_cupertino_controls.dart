@@ -81,20 +81,30 @@ class _BetterPlayerCupertinoControlsState extends BetterPlayerControlsState<Bett
     final isFullScreen = _betterPlayerController?.isFullScreen == true;
 
     _wasLoading = isLoading(_latestValue);
-    final controlsColumn = Column(children: <Widget>[
-      _buildTopBar(
-        backgroundColor,
-        iconColor,
-        barHeight,
-        buttonPadding,
-      ),
+    final controlsColumn = Stack(children: <Widget>[
       if (_wasLoading) Expanded(child: Center(child: _buildLoadingWidget())) else _buildHitArea(),
-      _buildNextVideoWidget(),
-      _buildBottomBar(
-        backgroundColor,
-        iconColor,
-        barHeight,
+      Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: _buildTopBar(
+          backgroundColor,
+          iconColor,
+          barHeight,
+          buttonPadding,
+        ),
       ),
+      Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: _buildBottomBar(
+          backgroundColor,
+          iconColor,
+          barHeight,
+        ),
+      ),
+      _buildNextVideoWidget(),
     ]);
     return GestureDetector(
       onTap: () {
@@ -268,8 +278,12 @@ class _BetterPlayerCupertinoControlsState extends BetterPlayerControlsState<Bett
                 _hideTimer?.cancel();
                 changePlayerControlsNotVisible(false);
               },
-        child: Container(
-          color: Colors.transparent,
+        child: AnimatedOpacity(
+          opacity: controlsNotVisible ? 0.0 : 1.0,
+          duration: _controlsConfiguration.controlsHideTime,
+          child: Container(
+            color: _controlsConfiguration.controlBarColor,
+          ),
         ),
       ),
     );
@@ -486,7 +500,6 @@ class _BetterPlayerCupertinoControlsState extends BetterPlayerControlsState<Bett
     if (!betterPlayerController!.controlsEnabled) {
       return const SizedBox();
     }
-    //betterPlayerController?.enableAirPlay();
     final barHeight = topBarHeight * 0.8;
     final iconSize = topBarHeight * 0.4;
     return Container(
