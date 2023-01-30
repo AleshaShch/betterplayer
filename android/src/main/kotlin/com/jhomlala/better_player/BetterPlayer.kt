@@ -490,6 +490,10 @@ internal class BetterPlayer(
 
             override fun onPlayerError(error: PlaybackException) {
                 eventSink.error("VideoError", "Video player had error $error", "")
+                if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+                    exoPlayer.seekToDefaultPosition()
+                    exoPlayer.prepare()
+                }
             }
         })
 
