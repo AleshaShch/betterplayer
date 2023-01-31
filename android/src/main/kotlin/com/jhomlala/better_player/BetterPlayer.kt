@@ -489,7 +489,9 @@ internal class BetterPlayer(
             }
 
             override fun onPlayerError(error: PlaybackException) {
+                Log.d(TAG, "onExoPlayerError $error ${error.errorCode}");
                 if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+                    Log.d(TAG, "handle PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW")
                     exoPlayer.seekToDefaultPosition()
                     exoPlayer.prepare()
                 } else {
