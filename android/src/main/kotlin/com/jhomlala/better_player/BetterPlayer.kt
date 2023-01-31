@@ -459,6 +459,13 @@ internal class BetterPlayer(
         exoPlayer?.setVideoSurface(surface)
         setAudioAttributes(exoPlayer, true)
         exoPlayer?.addListener(object : Player.Listener {
+
+            override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+                exoPlayer.bufferedPosition.let {
+                    Log.d(TAG, "onTimelineChanged $it")
+                }
+            }
+
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
                     Player.STATE_BUFFERING -> {
