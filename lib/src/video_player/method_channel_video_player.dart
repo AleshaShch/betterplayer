@@ -413,6 +413,12 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
             eventType: VideoEventType.castSessionUnavailable,
             key: key,
           );
+        case 'onTimelineChanged':
+          log('onTimelineChanged ${map['bufferedPosition']}');
+          return VideoEvent(
+            eventType: VideoEventType.unknown,
+            key: key,
+          );
 
         default:
           return VideoEvent(
