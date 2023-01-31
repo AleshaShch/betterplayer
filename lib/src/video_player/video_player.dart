@@ -24,6 +24,7 @@ class VideoPlayerValue {
     required this.duration,
     this.size,
     this.position = const Duration(),
+    this.bufferedPosition = const Duration(),
     this.absolutePosition,
     this.buffered = const <DurationRange>[],
     this.isPlaying = false,
@@ -50,6 +51,8 @@ class VideoPlayerValue {
 
   /// The current playback position.
   final Duration position;
+
+  final Duration? bufferedPosition;
 
   /// The current absolute playback position.
   ///
@@ -115,6 +118,7 @@ class VideoPlayerValue {
     Duration? duration,
     Size? size,
     Duration? position,
+    Duration? bufferedPosition,
     DateTime? absolutePosition,
     List<DurationRange>? buffered,
     bool? isPlaying,
@@ -130,6 +134,7 @@ class VideoPlayerValue {
       duration: duration ?? this.duration,
       size: size ?? this.size,
       position: position ?? this.position,
+      bufferedPosition: bufferedPosition ?? this.bufferedPosition,
       absolutePosition: absolutePosition ?? this.absolutePosition,
       buffered: buffered ?? this.buffered,
       isPlaying: isPlaying ?? this.isPlaying,
@@ -262,6 +267,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(isCastSessionAvailable: false);
           break;
         case VideoEventType.unknown:
+          break;
+        case VideoEventType.onTimelineChanged:
+          value = value.copyWith(bufferedPosition: event.position);
           break;
       }
     }
