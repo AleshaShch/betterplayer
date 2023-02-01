@@ -471,8 +471,6 @@ enum VideoEventType {
 
   castSessionUnavailable,
 
-  onTimelineChanged,
-
   /// An unknown event has been received.
   unknown,
 }

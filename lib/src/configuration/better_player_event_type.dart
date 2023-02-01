@@ -27,5 +27,4 @@ enum BetterPlayerEventType {
   changedPlaylistItem,
   chromecastSessionStart,
   chromecastSessionEnd,
-  bufferedPositionChanged,
 }

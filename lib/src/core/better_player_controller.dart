@@ -62,8 +62,6 @@ class BetterPlayerController {
   ///Time when last progress event was sent
   int _lastPositionSelection = 0;
 
-  Duration? _lastBufferedPosition = Duration();
-
   ///Currently used data source in player.
   BetterPlayerDataSource? _betterPlayerDataSource;
 
@@ -748,18 +746,6 @@ class BetterPlayerController {
 
     if (_betterPlayerSubtitlesSource?.asmsIsSegmented == true) {
       _loadAsmsSubtitlesSegments(currentVideoPlayerValue.position);
-    }
-
-    if (_lastBufferedPosition != currentVideoPlayerValue.bufferedPosition) {
-      _lastBufferedPosition = currentVideoPlayerValue.bufferedPosition;
-      _postEvent(
-        BetterPlayerEvent(
-          BetterPlayerEventType.bufferedPositionChanged,
-          parameters: <String, dynamic>{
-            'buffered_position': currentVideoPlayerValue.bufferedPosition,
-          },
-        ),
-      );
     }
 
     final int now = DateTime.now().millisecondsSinceEpoch;

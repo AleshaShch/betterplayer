@@ -416,9 +416,8 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
         case 'onTimelineChanged':
           log('onTimelineChanged ${map['bufferedPosition']}');
           return VideoEvent(
-            eventType: VideoEventType.onTimelineChanged,
+            eventType: VideoEventType.unknown,
             key: key,
-            position: Duration(milliseconds: map['bufferedPosition'] as int),
           );
 
         default:
