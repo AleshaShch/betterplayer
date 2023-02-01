@@ -463,10 +463,6 @@ internal class BetterPlayer(
             override fun onTimelineChanged(timeline: Timeline, reason: Int) {
                 exoPlayer.bufferedPosition.let {
                     Log.d(TAG, "onTimelineChanged $it")
-                    val event: MutableMap<String, Any> = HashMap()
-                    event["event"] = "onTimelineChanged"
-                    event["bufferedPosition"] = it
-                    eventSink.success(event)
                 }
             }
 
