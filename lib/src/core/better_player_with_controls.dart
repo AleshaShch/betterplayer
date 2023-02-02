@@ -97,7 +97,6 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
   }
 
   Container _buildPlayerWithControls(BetterPlayerController betterPlayerController, BuildContext context) {
-    print('_buildPlayerWithControls');
     final configuration = betterPlayerController.betterPlayerConfiguration;
     var rotation = configuration.rotation;
 

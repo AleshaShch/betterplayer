@@ -81,31 +81,34 @@ class _BetterPlayerCupertinoControlsState extends BetterPlayerControlsState<Bett
     final isFullScreen = _betterPlayerController?.isFullScreen == true;
 
     _wasLoading = isLoading(_latestValue);
-    final controlsColumn = Stack(children: <Widget>[
-      if (_wasLoading) Expanded(child: Center(child: _buildLoadingWidget())) else _buildHitArea(),
-      Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        child: _buildTopBar(
-          backgroundColor,
-          iconColor,
-          barHeight,
-          buttonPadding,
+    final controlsColumn = Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        if (_wasLoading) Center(child: _buildLoadingWidget()) else _buildHitArea(),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _buildTopBar(
+            backgroundColor,
+            iconColor,
+            barHeight,
+            buttonPadding,
+          ),
         ),
-      ),
-      Positioned(
-        bottom: 0,
-        left: 0,
-        right: 0,
-        child: _buildBottomBar(
-          backgroundColor,
-          iconColor,
-          barHeight,
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: _buildBottomBar(
+            backgroundColor,
+            iconColor,
+            barHeight,
+          ),
         ),
-      ),
-      _buildNextVideoWidget(),
-    ]);
+        _buildNextVideoWidget(),
+      ],
+    );
     return GestureDetector(
       onTap: () {
         if (BetterPlayerMultipleGestureDetector.of(context) != null) {
@@ -262,28 +265,26 @@ class _BetterPlayerCupertinoControlsState extends BetterPlayerControlsState<Bett
     );
   }
 
-  Expanded _buildHitArea() {
-    return Expanded(
-      child: GestureDetector(
-        onTap: _latestValue != null && _latestValue!.isPlaying
-            ? () {
-                if (controlsNotVisible == true) {
-                  cancelAndRestartTimer();
-                } else {
-                  _hideTimer?.cancel();
-                  changePlayerControlsNotVisible(true);
-                }
-              }
-            : () {
+  GestureDetector _buildHitArea() {
+    return GestureDetector(
+      onTap: _latestValue != null && _latestValue!.isPlaying
+          ? () {
+              if (controlsNotVisible == true) {
+                cancelAndRestartTimer();
+              } else {
                 _hideTimer?.cancel();
-                changePlayerControlsNotVisible(false);
-              },
-        child: AnimatedOpacity(
-          opacity: controlsNotVisible ? 0.0 : 1.0,
-          duration: _controlsConfiguration.controlsHideTime,
-          child: Container(
-            color: _controlsConfiguration.controlBarColor,
-          ),
+                changePlayerControlsNotVisible(true);
+              }
+            }
+          : () {
+              _hideTimer?.cancel();
+              changePlayerControlsNotVisible(false);
+            },
+      child: AnimatedOpacity(
+        opacity: controlsNotVisible ? 0.0 : 1.0,
+        duration: _controlsConfiguration.controlsHideTime,
+        child: Container(
+          color: _controlsConfiguration.controlBarColor,
         ),
       ),
     );
