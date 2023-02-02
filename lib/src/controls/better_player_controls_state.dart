@@ -72,7 +72,6 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget> extends State
                 ChromeCastButton(
                   onButtonCreated: (controller) {
                     chromeCastController = controller;
-                    betterPlayerController?.onCastClicked();
                   },
                 ),
               ],

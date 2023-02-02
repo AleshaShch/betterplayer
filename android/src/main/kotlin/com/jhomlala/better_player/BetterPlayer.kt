@@ -108,8 +108,25 @@ internal class BetterPlayer(
             .build()
         workManager = WorkManager.getInstance(context)
         workerObserverMap = HashMap()
-        castPlayer = CastPlayer(CastContext.getSharedInstance()!!);
         setupVideoPlayer(eventChannel, textureEntry, result)
+        initCastPlayer()
+    }
+
+    private fun initCastPlayer() {
+        castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
+        castPlayer!!.setSessionAvailabilityListener(object : SessionAvailabilityListener {
+            override fun onCastSessionAvailable() {
+                val event: MutableMap<String, Any> = HashMap()
+                event["event"] = "castSessionAvailable"
+                eventSink.success(event)
+            }
+
+            override fun onCastSessionUnavailable() {
+                val event: MutableMap<String, Any> = HashMap()
+                event["event"] = "castSessionUnavailable"
+                eventSink.success(event)
+            }
+        })
     }
 
     fun setDataSource(
@@ -512,22 +529,6 @@ internal class BetterPlayer(
         result.success(reply)
     }
 
-    fun startCast() {
-        castPlayer!!.setSessionAvailabilityListener(object : SessionAvailabilityListener {
-            override fun onCastSessionAvailable() {
-                val event: MutableMap<String, Any> = HashMap()
-                event["event"] = "castSessionAvailable"
-                eventSink.success(event)
-            }
-
-            override fun onCastSessionUnavailable() {
-                val event: MutableMap<String, Any> = HashMap()
-                event["event"] = "castSessionUnavailable"
-                eventSink.success(event)
-            }
-        })
-    }
-
     fun stopCast() {
         castPlayer?.setSessionAvailabilityListener(null)
     }
@@ -811,6 +812,9 @@ internal class BetterPlayer(
         eventChannel.setStreamHandler(null)
         surface?.release()
         exoPlayer?.release()
+        disableCast()
+        castPlayer?.release()
+        castPlayer = null
     }
 
     fun enableCast(uri: String?) {

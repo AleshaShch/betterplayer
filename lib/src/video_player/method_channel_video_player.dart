@@ -457,14 +457,6 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> startCast() {
-    log('method channel startcast');
-    return _channel.invokeMethod<void>(
-      'startCast',
-    );
-  }
-
-  @override
   Widget buildAirPlayButtonView() {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(

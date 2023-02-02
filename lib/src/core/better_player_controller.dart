@@ -1208,10 +1208,6 @@ class BetterPlayerController {
     return videoPlayerController?.disableCast();
   }
 
-  void onCastClicked() {
-    return videoPlayerController?.startCast();
-  }
-
   Widget? buildAirPlayButton() {
     return videoPlayerController?.buildAirPlayButton();
   }

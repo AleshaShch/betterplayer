@@ -236,22 +236,15 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 dispose(player, textureId)
                 result.success(null)
             }
-            "enableCast" -> {
+            ENABLE_CAST -> {
                 val dataSource = dataSources.get(textureId);
                 val uri = getParameter (dataSource, URI_PARAMETER, "");
                 player.enableCast(uri);
                 result.success(null);
             }
-            "disableCast" -> {
+            DISABLE_CAST -> {
                 player.disableCast();
                 result.success(null);
-            }
-            "startCast" -> {
-                Log.d("BetterPlayerPlugin","onMethodCall start call");
-                castPlayer?.stopCast()
-                castPlayer = player
-                player.startCast()
-                result.success(null)
             }
             else -> result.notImplemented()
         }
@@ -578,5 +571,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         private const val DISPOSE_METHOD = "dispose"
         private const val PRE_CACHE_METHOD = "preCache"
         private const val STOP_PRE_CACHE_METHOD = "stopPreCache"
+        private const val ENABLE_CAST = "enableCast"
+        private const val DISABLE_CAST = "disableCast"
     }
 }
