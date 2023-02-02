@@ -62,6 +62,7 @@ class _BetterPlayerMaterialControlsState extends BetterPlayerControlsState<Bette
   ///Builds main widget of the controls.
   Widget _buildMainWidget() {
     _wasLoading = isLoading(_latestValue);
+    final Widget? placeholder = _betterPlayerController?.betterPlayerConfiguration.placeholder;
     if (_latestValue?.hasError == true) {
       return Container(
         color: Colors.black,
@@ -91,6 +92,7 @@ class _BetterPlayerMaterialControlsState extends BetterPlayerControlsState<Bette
         child: Stack(
           fit: StackFit.expand,
           children: [
+            if (_latestValue?.isCastSessionAvailable == true && placeholder != null) placeholder else SizedBox.shrink(),
             if (_wasLoading) Center(child: _buildLoadingWidget()) else _buildHitArea(),
             Positioned(
               top: 0,

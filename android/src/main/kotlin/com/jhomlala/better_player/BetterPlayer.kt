@@ -92,6 +92,7 @@ internal class BetterPlayer(
         customDefaultLoadControl ?: CustomDefaultLoadControl()
     private var lastSendBufferedPosition = 0L
     private var castPlayer: CastPlayer? = null
+    private var playerVolume: Float = 0f
 
     init {
         val loadBuilder = DefaultLoadControl.Builder()
@@ -110,6 +111,7 @@ internal class BetterPlayer(
         workerObserverMap = HashMap()
         setupVideoPlayer(eventChannel, textureEntry, result)
         initCastPlayer()
+        playerVolume = exoPlayer.volume;
     }
 
     private fun initCastPlayer() {
@@ -119,12 +121,14 @@ internal class BetterPlayer(
                 val event: MutableMap<String, Any> = HashMap()
                 event["event"] = "castSessionAvailable"
                 eventSink.success(event)
+                exoPlayer?.volume = 0f
             }
 
             override fun onCastSessionUnavailable() {
                 val event: MutableMap<String, Any> = HashMap()
                 event["event"] = "castSessionUnavailable"
                 eventSink.success(event)
+                exoPlayer?.volume = playerVolume
             }
         })
     }

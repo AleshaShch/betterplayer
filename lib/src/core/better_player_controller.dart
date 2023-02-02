@@ -738,10 +738,12 @@ class BetterPlayerController {
       _wasInCastMode = true;
       videoPlayerController?.enableCast();
       _postEvent(BetterPlayerEvent(BetterPlayerEventType.chromecastSessionStart));
+      setControlsVisibility(true);
     } else if (!currentVideoPlayerValue.isCastSessionAvailable && _wasInCastMode) {
       _wasInCastMode = false;
       videoPlayerController?.disableCast();
       _postEvent(BetterPlayerEvent(BetterPlayerEventType.chromecastSessionEnd));
+      setControlsVisibility(true);
     }
 
     if (_betterPlayerSubtitlesSource?.asmsIsSegmented == true) {
