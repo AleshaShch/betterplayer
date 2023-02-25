@@ -14,6 +14,9 @@ public class AirPlayButtonController: NSObject, FlutterPlatformView {
         airPlayButton = AVRoutePickerView()
         airPlayButton.tintColor = UIColor.white
         airPlayButton.activeTintColor = UIColor(red: 0.07, green: 0.45, blue: 0.87, alpha: 1.00)
+        if #available(iOS 13.0, *) {
+            airPlayButton.prioritizesVideoDevices = true
+        }
     }
 
     public func view() -> UIView {
