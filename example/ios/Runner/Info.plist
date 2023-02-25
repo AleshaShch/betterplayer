@@ -58,5 +58,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>AVInitialRouteSharingPolicy</key>
+	<string>LongFormVideo</string>
 </dict>
 </plist>
