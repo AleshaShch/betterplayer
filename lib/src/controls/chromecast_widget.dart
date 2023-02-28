@@ -37,9 +37,7 @@ class ChromeCastButton extends StatelessWidget {
   }
 
   Future<void> _onPlatformViewCreated(int id) async {
-    print("On platform view created!");
     final ChromeCastController controller = await ChromeCastController.init(id);
-    print("Init completed!!!!");
     if (onButtonCreated != null) {
       onButtonCreated?.call(controller);
     }
@@ -58,7 +56,6 @@ class ChromeCastController {
   /// Initialize control of a [ChromeCastButton] with [id].
   static Future<ChromeCastController> init(int id) async {
     await _chromeCastPlatform.init(id);
-    print("Done!!!");
     return ChromeCastController._(id: id);
   }
 
@@ -112,7 +109,6 @@ class MethodChannelChromeCast extends ChromeCastPlatform {
       channel = MethodChannel('flutter_video_cast/chromeCast_$id');
       _channels[id] = channel;
     }
-    print("here completed");
   }
 
   @override
