@@ -11,6 +11,7 @@ static void* playbackLikelyToKeepUpContext = &playbackLikelyToKeepUpContext;
 static void* playbackBufferEmptyContext = &playbackBufferEmptyContext;
 static void* playbackBufferFullContext = &playbackBufferFullContext;
 static void* presentationSizeContext = &presentationSizeContext;
+static void* externalPlaybackActiveContext = &externalPlaybackActiveContext;
 
 
 #if TARGET_OS_IOS
@@ -49,6 +50,7 @@ AVPictureInPictureController *_pipController;
 - (void)addObservers:(AVPlayerItem*)item {
     if (!self._observersAdded){
         [_player addObserver:self forKeyPath:@"rate" options:0 context:nil];
+        [_player addObserver:self forKeyPath:@"externalPlaybackActive" options:NSKeyValueObservingOptionNew context: externalPlaybackActiveContext];
         [item addObserver:self forKeyPath:@"loadedTimeRanges" options:0 context:timeRangeContext];
         [item addObserver:self forKeyPath:@"status" options:0 context:statusContext];
         [item addObserver:self forKeyPath:@"presentationSize" options:0 context:presentationSizeContext];
@@ -94,6 +96,7 @@ AVPictureInPictureController *_pipController;
 - (void) removeObservers{
     if (self._observersAdded){
         [_player removeObserver:self forKeyPath:@"rate" context:nil];
+        [_player removeObserver:self forKeyPath:@"externalPlaybackActive" context:externalPlaybackActiveContext];
         [[_player currentItem] removeObserver:self forKeyPath:@"status" context:statusContext];
         [[_player currentItem] removeObserver:self forKeyPath:@"presentationSize" context:presentationSizeContext];
         [[_player currentItem] removeObserver:self
@@ -413,6 +416,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     } else if (context == playbackBufferFullContext) {
         if (_eventSink != nil) {
             _eventSink(@{@"event" : @"bufferingEnd", @"key" : _key});
+        }
+    } else if (context == externalPlaybackActiveContext) {
+        BOOL isExternalPlaybackActive = [change[NSKeyValueChangeNewKey] boolValue];
+        if (_eventSink != nil) {
+            _eventSink(@{@"event": @"isAirPlaySessionActive", @"values": @(isExternalPlaybackActive), @"key": _key});
         }
     }
 }

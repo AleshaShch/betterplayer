@@ -467,6 +467,10 @@ enum VideoEventType {
 
   castSessionUnavailable,
 
+  airPlaySessionActive,
+
+  airPlaySessionInactive,
+
   /// An unknown event has been received.
   unknown,
 }

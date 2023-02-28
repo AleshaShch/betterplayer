@@ -864,6 +864,11 @@ class BetterPlayerController {
         betterPlayerConfiguration.handleLifecycle;
   }
 
+  bool _isCastingSessionActive() {
+    return (videoPlayerController?.value.isAirPlaySessionActive ?? false) ||
+        (videoPlayerController?.value.isCastSessionAvailable ?? false);
+  }
+
   ///Listener which handles state of player visibility. If player visibility is
   ///below 0.0 then video will be paused. When value is greater than 0, video
   ///will play again. If there's different handler of visibility then it will be
@@ -967,7 +972,7 @@ class BetterPlayerController {
           play();
         }
       }
-      if (appLifecycleState == AppLifecycleState.paused) {
+      if (appLifecycleState == AppLifecycleState.paused && !_isCastingSessionActive()) {
         _wasPlayingBeforePause ??= isPlaying();
         pause();
       }

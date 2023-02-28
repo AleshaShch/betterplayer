@@ -414,6 +414,12 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
             key: key,
           );
 
+        case 'isAirPlaySessionActive':
+          return VideoEvent(
+            eventType: map['values'] ? VideoEventType.airPlaySessionActive : VideoEventType.airPlaySessionInactive,
+            key: key,
+          );
+
         default:
           return VideoEvent(
             eventType: VideoEventType.unknown,

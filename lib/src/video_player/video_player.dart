@@ -34,6 +34,7 @@ class VideoPlayerValue {
     this.errorDescription,
     this.isPip = false,
     this.isCastSessionAvailable = false,
+    this.isAirPlaySessionActive = false,
   });
 
   /// Returns an instance with a `null` [Duration].
@@ -89,6 +90,8 @@ class VideoPlayerValue {
 
   final bool isCastSessionAvailable;
 
+  final bool isAirPlaySessionActive;
+
   /// Indicates whether or not the video has been loaded and is ready to play.
   bool get initialized => duration != null;
 
@@ -125,6 +128,7 @@ class VideoPlayerValue {
     double? speed,
     bool? isPip,
     bool? isCastSessionAvailable,
+    bool? isAirPlaySessionActive,
   }) {
     return VideoPlayerValue(
       duration: duration ?? this.duration,
@@ -140,6 +144,7 @@ class VideoPlayerValue {
       errorDescription: errorDescription ?? this.errorDescription,
       isPip: isPip ?? this.isPip,
       isCastSessionAvailable: isCastSessionAvailable ?? this.isCastSessionAvailable,
+      isAirPlaySessionActive: isAirPlaySessionActive ?? this.isAirPlaySessionActive,
     );
   }
 
@@ -262,6 +267,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(isCastSessionAvailable: false);
           break;
         case VideoEventType.unknown:
+          break;
+        case VideoEventType.airPlaySessionActive:
+          value = value.copyWith(isAirPlaySessionActive: true);
+          break;
+        case VideoEventType.airPlaySessionInactive:
+          value = value.copyWith(isAirPlaySessionActive: false);
           break;
       }
     }

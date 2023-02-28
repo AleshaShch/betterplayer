@@ -238,7 +238,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             }
             ENABLE_CAST -> {
                 val dataSource = dataSources.get(textureId);
-                val uri = getParameter (dataSource, URI_PARAMETER, "");
+                val uri = getParameter(dataSource, URI_PARAMETER, "")
                 player.enableCast(uri);
                 result.success(null);
             }
