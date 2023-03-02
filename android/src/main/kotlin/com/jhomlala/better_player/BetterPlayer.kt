@@ -810,9 +810,9 @@ internal class BetterPlayer(
         eventChannel.setStreamHandler(null)
         surface?.release()
         exoPlayer?.release()
-        disableCast()
+        /*disableCast()
         castPlayer?.release()
-        castPlayer = null
+        castPlayer = null*/
     }
 
     fun enableCast(uri: String?) {
