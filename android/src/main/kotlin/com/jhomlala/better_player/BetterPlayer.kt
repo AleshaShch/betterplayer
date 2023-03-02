@@ -25,8 +25,6 @@ import androidx.work.WorkManager
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.drm.*
-import com.google.android.exoplayer2.ext.cast.CastPlayer
-import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ClippingMediaSource
@@ -47,11 +45,12 @@ import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.util.Util
 import com.google.android.gms.cast.MediaInfo
-import com.google.android.gms.cast.MediaLoadOptions
+import com.google.android.gms.cast.MediaLoadRequestData
 import com.google.android.gms.cast.MediaSeekOptions
 import com.google.android.gms.cast.framework.CastContext
+import com.google.android.gms.cast.framework.CastSession
+import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.gms.cast.framework.media.RemoteMediaClient
-import com.google.android.gms.common.api.PendingResult
 import com.jhomlala.better_player.DataSourceUtils.getDataSourceFactory
 import com.jhomlala.better_player.DataSourceUtils.getUserAgent
 import com.jhomlala.better_player.DataSourceUtils.isHTTP
@@ -91,8 +90,18 @@ internal class BetterPlayer(
     private val customDefaultLoadControl: CustomDefaultLoadControl =
         customDefaultLoadControl ?: CustomDefaultLoadControl()
     private var lastSendBufferedPosition = 0L
-    private var castPlayer: CastPlayer? = null
-    private var playerVolume: Float = 0f
+
+    private var mCastContext: CastContext? = null
+    private var mCastSession: CastSession? = null
+    private var mSessionManagerListener: SessionManagerListener<CastSession>? = null
+    private var mProgresListener: RemoteMediaClient.ProgressListener? = null
+    var mRemoteMediaClientPosition = 0L
+
+    enum class PlaybackLocation {
+        LOCAL, REMOTE
+    }
+
+    var mLocation: PlaybackLocation? = null
 
     init {
         val loadBuilder = DefaultLoadControl.Builder()
@@ -110,27 +119,77 @@ internal class BetterPlayer(
         workManager = WorkManager.getInstance(context)
         workerObserverMap = HashMap()
         setupVideoPlayer(eventChannel, textureEntry, result)
-        initCastPlayer()
-        playerVolume = exoPlayer.volume;
+        initCastEnvironment()
+        updatePlaybackLocation(PlaybackLocation.LOCAL)
     }
 
-    private fun initCastPlayer() {
-        castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
-        castPlayer!!.setSessionAvailabilityListener(object : SessionAvailabilityListener {
-            override fun onCastSessionAvailable() {
+    private fun initCastEnvironment() {
+        mCastContext = CastContext.getSharedInstance()
+        mCastSession = mCastContext!!.sessionManager.currentCastSession
+        setupCastListener()
+
+        mCastContext!!.sessionManager.addSessionManagerListener(mSessionManagerListener!!, CastSession::class.java)
+    }
+
+    private fun setupCastListener() {
+
+        mProgresListener = RemoteMediaClient.ProgressListener {
+            progressMs, _ -> mRemoteMediaClientPosition = progressMs
+        }
+
+        mSessionManagerListener = object : SessionManagerListener<CastSession> {
+            override fun onSessionEnded(session: CastSession, error: Int) {
+                onApplicationDisconnected()
+            }
+
+            override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) {
+                onApplicationConnected(session)
+            }
+
+            override fun onSessionResumeFailed(session: CastSession, error: Int) {
+                onApplicationDisconnected()
+            }
+
+            override fun onSessionStarted(session: CastSession, sessionId: String) {
+                onApplicationConnected(session)
+            }
+
+            override fun onSessionStartFailed(session: CastSession, error: Int) {
+                onApplicationDisconnected()
+            }
+
+            override fun onSessionStarting(session: CastSession) {}
+            override fun onSessionEnding(session: CastSession) {}
+            override fun onSessionResuming(session: CastSession, sessionId: String) {}
+            override fun onSessionSuspended(session: CastSession, reason: Int) {}
+            private fun onApplicationConnected(castSession: CastSession) {
+                Log.d(TAG, "Chromecast session: onApplicationConnected ${castSession.castDevice?.friendlyName}")
+                mCastSession = castSession
+
                 val event: MutableMap<String, Any> = HashMap()
                 event["event"] = "castSessionAvailable"
                 eventSink.success(event)
-                exoPlayer?.volume = 0f
+
+                if (exoPlayer?.isPlaying == true) exoPlayer.pause()
+
+                updatePlaybackLocation(PlaybackLocation.REMOTE)
+
+                mRemoteMediaClientPosition = position
+                mCastSession!!.remoteMediaClient?.addProgressListener(mProgresListener!!, 300)
             }
 
-            override fun onCastSessionUnavailable() {
+            private fun onApplicationDisconnected() {
+                Log.d(TAG, "Chromecast session: onApplicationDisconnected")
+
                 val event: MutableMap<String, Any> = HashMap()
                 event["event"] = "castSessionUnavailable"
                 eventSink.success(event)
-                exoPlayer?.volume = playerVolume
+
+                exoPlayer?.seekTo(mRemoteMediaClientPosition)
+                updatePlaybackLocation(PlaybackLocation.LOCAL)
+                mCastSession!!.remoteMediaClient?.removeProgressListener(mProgresListener!!)
             }
-        })
+        }
     }
 
     fun setDataSource(
@@ -222,6 +281,22 @@ internal class BetterPlayer(
         }
         exoPlayer?.prepare()
         result.success(null)
+    }
+
+    fun loadRemoteMedia(uri: String?) {
+        if (mCastSession == null) return
+        val remoteMediaClient = mCastSession!!.remoteMediaClient ?: return
+        remoteMediaClient.load(
+                MediaLoadRequestData.Builder()
+                        .setMediaInfo(MediaInfo.Builder(uri!!).build())
+                        .setAutoplay(true)
+                        .setCurrentTime(position)
+                        .build()
+        )
+    }
+
+    private fun updatePlaybackLocation(location: PlaybackLocation) {
+        mLocation = location
     }
 
     fun setupPlayerNotification(
@@ -527,10 +602,6 @@ internal class BetterPlayer(
         result.success(reply)
     }
 
-    fun stopCast() {
-        castPlayer?.setSessionAvailabilityListener(null)
-    }
-
     fun sendBufferingUpdate(isFromBufferingStart: Boolean) {
         val bufferedPosition = exoPlayer?.bufferedPosition ?: 0L
         if (isFromBufferingStart || bufferedPosition != lastSendBufferedPosition) {
@@ -560,33 +631,21 @@ internal class BetterPlayer(
         }
     }
 
-    private fun getCastRemoteMediaClient(): RemoteMediaClient? {
-        return if (CastContext.getSharedInstance()!!.sessionManager.currentCastSession != null) {
-            CastContext
-                    .getSharedInstance()
-                    ?.sessionManager
-                    ?.currentCastSession
-                    ?.remoteMediaClient
-        } else {
-            null
-        }
-    }
-
     fun play() {
-        exoPlayer?.playWhenReady = true
-        if (castPlayer!!.isCastSessionAvailable) {
-            val remoteMediaClient = getCastRemoteMediaClient()
-            castPlayerSeekTo(position.toInt())
-            remoteMediaClient?.play()
+        when(mLocation) {
+            PlaybackLocation.LOCAL -> exoPlayer?.playWhenReady = true
+            PlaybackLocation.REMOTE -> mCastSession!!.remoteMediaClient!!.play()
+            else -> {}
         }
     }
 
     fun pause() {
-        exoPlayer?.playWhenReady = false
-        val remoteMediaClient = getCastRemoteMediaClient()
-        if (remoteMediaClient != null) {
-            castPlayerSeekTo(position.toInt())
-            remoteMediaClient.pause()
+        when(mLocation) {
+            PlaybackLocation.LOCAL -> exoPlayer?.playWhenReady = false
+            PlaybackLocation.REMOTE -> {
+                mCastSession!!.remoteMediaClient!!.pause()
+            }
+            else -> {}
         }
     }
 
@@ -622,15 +681,16 @@ internal class BetterPlayer(
     }
 
     fun seekTo(location: Int) {
-        exoPlayer?.seekTo(location.toLong())
-        castPlayerSeekTo(location);
-    }
-
-    private fun castPlayerSeekTo(location: Int) {
-        val remoteMediaClient = getCastRemoteMediaClient()
-        if (remoteMediaClient != null) {
-            val mediaSeekOptions = MediaSeekOptions.Builder().setPosition(location.toLong()).build()
-            remoteMediaClient.seek(mediaSeekOptions)
+        when(mLocation) {
+            PlaybackLocation.LOCAL -> exoPlayer?.seekTo(location.toLong())
+            PlaybackLocation.REMOTE -> {
+                mCastSession!!.remoteMediaClient!!.seek(
+                        MediaSeekOptions.Builder()
+                                .setPosition(location.toLong())
+                                .build()
+                )
+            }
+            else -> {}
         }
     }
 
@@ -813,24 +873,6 @@ internal class BetterPlayer(
         /*disableCast()
         castPlayer?.release()
         castPlayer = null*/
-    }
-
-    fun enableCast(uri: String?) {
-        if (castPlayer!!.isCastSessionAvailable) {
-            val media = MediaInfo.Builder(uri!!).build()
-            val options = MediaLoadOptions.Builder().build()
-            val request: PendingResult<RemoteMediaClient.MediaChannelResult> = CastContext.getSharedInstance()!!.sessionManager.currentCastSession!!.remoteMediaClient!!.load(media, options)
-            request.addStatusListener { status ->
-                if (status.isSuccess) {
-                    castPlayerSeekTo(position.toInt())
-                    if (exoPlayer!!.isPlaying){
-                        castPlayer?.play();
-                    } else {
-                        castPlayer?.pause();
-                    }
-                }
-            }
-        }
     }
 
     fun disableCast() {

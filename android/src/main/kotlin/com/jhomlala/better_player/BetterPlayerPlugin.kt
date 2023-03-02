@@ -40,7 +40,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var pipRunnable: Runnable? = null
     private var chromeCastFactory: ChromeCastFactory? = null
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
-        Log.d(TAG,"ATTACHED TO ENGINE!");
+        Log.d(TAG,"onAttachedToEngine");
         val loader = FlutterLoader()
 
         flutterState = FlutterState(
@@ -154,8 +154,6 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         }
     }
 
-    private var castPlayer: BetterPlayer? = null
-
     private fun onMethodCall(
         call: MethodCall,
         result: MethodChannel.Result,
@@ -189,8 +187,16 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 result.success(null)
             }
             POSITION_METHOD -> {
-                result.success(player.position)
-                player.sendBufferingUpdate(false)
+                when(player.mLocation) {
+                    BetterPlayer.PlaybackLocation.LOCAL -> {
+                        result.success(player.position)
+                        player.sendBufferingUpdate(false)
+                    }
+                    BetterPlayer.PlaybackLocation.REMOTE -> {
+                        result.success(player.mRemoteMediaClientPosition)
+                    }
+                    else -> {}
+                }
             }
             ABSOLUTE_POSITION_METHOD -> result.success(player.absolutePosition)
             SET_SPEED_METHOD -> {
@@ -239,8 +245,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             ENABLE_CAST -> {
                 val dataSource = dataSources.get(textureId);
                 val uri = getParameter(dataSource, URI_PARAMETER, "")
-                player.enableCast(uri);
-                result.success(null);
+                player.loadRemoteMedia(uri)
+                result.success(null)
             }
             DISABLE_CAST -> {
                 player.disableCast();
