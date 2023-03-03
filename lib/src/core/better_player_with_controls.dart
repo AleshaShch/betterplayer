@@ -136,7 +136,8 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
             subtitles: betterPlayerController.subtitlesLines,
             playerVisibilityStream: playerVisibilityStreamController.stream,
           ),
-          if (!placeholderOnTop || isChromecastSessionActive) _buildPlaceholder(betterPlayerController),
+          if (!placeholderOnTop || (isChromecastSessionActive && !controlsConfiguration.showControls))
+            _buildPlaceholder(betterPlayerController),
           _buildControls(context, betterPlayerController),
         ],
       ),
