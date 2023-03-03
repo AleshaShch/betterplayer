@@ -170,8 +170,6 @@ internal class BetterPlayer(
                 event["event"] = "castSessionAvailable"
                 eventSink.success(event)
 
-                if (exoPlayer?.isPlaying == true) exoPlayer.pause()
-
                 updatePlaybackLocation(PlaybackLocation.REMOTE)
 
                 mRemoteMediaClientPosition = position
@@ -290,10 +288,11 @@ internal class BetterPlayer(
         remoteMediaClient.load(
                 MediaLoadRequestData.Builder()
                         .setMediaInfo(MediaInfo.Builder(uri!!).build())
-                        .setAutoplay(true)
+                        .setAutoplay(exoPlayer?.isPlaying)
                         .setCurrentTime(position)
                         .build()
         )
+        if (exoPlayer?.isPlaying == true) exoPlayer.pause()
     }
 
     private fun updatePlaybackLocation(location: PlaybackLocation) {

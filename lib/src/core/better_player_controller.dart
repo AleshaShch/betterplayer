@@ -1240,6 +1240,7 @@ class BetterPlayerController {
         videoPlayerController!.removeListener(_onFullScreenStateChanged);
         videoPlayerController!.removeListener(_onVideoPlayerChanged);
         videoPlayerController!.dispose();
+        disableCast();
       }
       _eventListeners.clear();
       _nextVideoTimer?.cancel();
