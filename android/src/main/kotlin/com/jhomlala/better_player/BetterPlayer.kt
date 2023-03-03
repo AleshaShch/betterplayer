@@ -186,6 +186,7 @@ internal class BetterPlayer(
                 eventSink.success(event)
 
                 exoPlayer?.seekTo(mRemoteMediaClientPosition)
+                exoPlayer?.play()
                 updatePlaybackLocation(PlaybackLocation.LOCAL)
                 mCastSession!!.remoteMediaClient?.removeProgressListener(mProgresListener!!)
             }

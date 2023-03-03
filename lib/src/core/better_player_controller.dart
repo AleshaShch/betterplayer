@@ -880,11 +880,6 @@ class BetterPlayerController {
       return;
     }
     _postEvent(BetterPlayerEvent(BetterPlayerEventType.changedPlayerVisibility));
-    if (_wasInCastMode) {
-      print("Disabled cast because is no longer visible!!");
-      disableCast();
-      _wasInCastMode = false;
-    }
 
     if (_isAutomaticPlayPauseHandled()) {
       if (betterPlayerConfiguration.playerVisibilityChangedBehavior != null) {
