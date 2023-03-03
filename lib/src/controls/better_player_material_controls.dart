@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:better_player/src/configuration/better_player_controls_configuration.dart';
 import 'package:better_player/src/controls/better_player_clickable_widget.dart';
 import 'package:better_player/src/controls/better_player_controls_state.dart';
@@ -62,7 +61,6 @@ class _BetterPlayerMaterialControlsState extends BetterPlayerControlsState<Bette
 
   ///Builds main widget of the controls.
   Widget _buildMainWidget() {
-    log('build material controls main widget, isCastingSessionActive ${_latestValue?.isCastSessionAvailable}');
     _wasLoading = isLoading(_latestValue);
     final Widget? placeholder = _betterPlayerController?.betterPlayerConfiguration.placeholder;
     if (_latestValue?.hasError == true) {
