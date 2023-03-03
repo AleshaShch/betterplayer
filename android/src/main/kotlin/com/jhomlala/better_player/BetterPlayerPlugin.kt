@@ -245,7 +245,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             ENABLE_CAST -> {
                 val dataSource = dataSources.get(textureId);
                 val uri = getParameter(dataSource, URI_PARAMETER, "")
-                player.loadRemoteMedia(uri)
+                val subtitlesUrl = call.argument<String?>(SUBTITLES_URL)
+                player.loadRemoteMedia(uri, subtitlesUrl)
                 result.success(null)
             }
             DISABLE_CAST -> {
@@ -578,6 +579,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         private const val PRE_CACHE_METHOD = "preCache"
         private const val STOP_PRE_CACHE_METHOD = "stopPreCache"
         private const val ENABLE_CAST = "enableCast"
+        private const val SUBTITLES_URL = "subtitlesUrl"
         private const val DISABLE_CAST = "disableCast"
     }
 }

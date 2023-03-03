@@ -736,7 +736,9 @@ class BetterPlayerController {
       videoPlayerController?.refresh();
     } else if (currentVideoPlayerValue.isCastSessionAvailable && !_wasInCastMode) {
       _wasInCastMode = true;
-      videoPlayerController?.enableCast();
+      String? currentSubtitlesUrl = null;
+      if (subtitlesLines.isNotEmpty) currentSubtitlesUrl = _betterPlayerSubtitlesSource!.urls!.first;
+      videoPlayerController?.enableCast(currentSubtitlesUrl);
       _postEvent(BetterPlayerEvent(BetterPlayerEventType.chromecastSessionStart));
       setControlsVisibility(true);
     } else if (!currentVideoPlayerValue.isCastSessionAvailable && _wasInCastMode) {
@@ -1200,10 +1202,6 @@ class BetterPlayerController {
   Future<void> stopPreCache(BetterPlayerDataSource betterPlayerDataSource) async {
     return VideoPlayerController?.stopPreCache(
         betterPlayerDataSource.url, betterPlayerDataSource.cacheConfiguration?.key);
-  }
-
-  void enableCast() async {
-    return videoPlayerController?.enableCast();
   }
 
   void disableCast() async {

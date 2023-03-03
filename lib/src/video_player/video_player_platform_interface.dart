@@ -169,7 +169,7 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('buildAirPlayButtonView() has not been implemented.');
   }
 
-  Future<void> enableCast(int? textureId) {
+  Future<void> enableCast(int? textureId, String? subtitlesUrl) {
     throw UnimplementedError('enableCast() has not been implemented.');
   }
 

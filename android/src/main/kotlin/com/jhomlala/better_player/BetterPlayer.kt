@@ -47,6 +47,7 @@ import com.google.android.exoplayer2.util.Util
 import com.google.android.gms.cast.MediaInfo
 import com.google.android.gms.cast.MediaLoadRequestData
 import com.google.android.gms.cast.MediaSeekOptions
+import com.google.android.gms.cast.MediaTrack
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
@@ -282,17 +283,41 @@ internal class BetterPlayer(
         result.success(null)
     }
 
-    fun loadRemoteMedia(uri: String?) {
+    fun loadRemoteMedia(uri: String?, subtitlesUrl: String?) {
         if (mCastSession == null) return
         val remoteMediaClient = mCastSession!!.remoteMediaClient ?: return
+
+        var subtitlesTrack: MutableList<MediaTrack> = ArrayList<MediaTrack>()
+        if (subtitlesUrl != null) subtitlesTrack = setupSubtitlesForRemoteMediaClient(subtitlesUrl)
+
         remoteMediaClient.load(
                 MediaLoadRequestData.Builder()
-                        .setMediaInfo(MediaInfo.Builder(uri!!).build())
+                        .setMediaInfo(
+                                MediaInfo.Builder(uri!!)
+                                        .setMediaTracks(subtitlesTrack)
+                                        .build()
+                        )
                         .setAutoplay(exoPlayer?.isPlaying)
                         .setCurrentTime(position)
                         .build()
-        )
+        ).setResultCallback {
+            mediaChannelResult: RemoteMediaClient.MediaChannelResult ->
+            if (mediaChannelResult.status.isSuccess) remoteMediaClient.setActiveMediaTracks(longArrayOf(1))
+        }
+
         if (exoPlayer?.isPlaying == true) exoPlayer.pause()
+    }
+
+    private fun setupSubtitlesForRemoteMediaClient(subtitlesUrl: String): MutableList<MediaTrack> {
+        val tracks: MutableList<MediaTrack> = ArrayList<MediaTrack>()
+        val subtitleTrack: MediaTrack = MediaTrack.Builder(1, MediaTrack.TYPE_TEXT)
+                .setSubtype(MediaTrack.SUBTYPE_SUBTITLES)
+                .setContentType("text/vtt")
+                .setContentId(subtitlesUrl)
+                .setLanguage("fi-FI")
+                .build()
+        tracks.add(subtitleTrack)
+        return tracks
     }
 
     private fun updatePlaybackLocation(location: PlaybackLocation) {

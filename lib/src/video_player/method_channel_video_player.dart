@@ -443,11 +443,12 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> enableCast(int? textureId) {
+  Future<void> enableCast(int? textureId, String? subtitlesUrl) {
     return _channel.invokeMethod<void>(
       'enableCast',
       <String, dynamic>{
         'textureId': textureId,
+        'subtitlesUrl': subtitlesUrl,
       },
     );
   }
