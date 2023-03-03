@@ -98,7 +98,6 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
   }
 
   Container _buildPlayerWithControls(BetterPlayerController betterPlayerController, BuildContext context) {
-    developer.log('buildPlayerWithControls');
     final configuration = betterPlayerController.betterPlayerConfiguration;
     var rotation = configuration.rotation;
 
@@ -112,6 +111,11 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
     _initialized = true;
 
     final bool placeholderOnTop = betterPlayerController.betterPlayerConfiguration.placeholderOnTop;
+
+    // Display placeholder in mini player when chromecast session active
+    final bool isChromecastSessionActive =
+        betterPlayerController.videoPlayerController?.value.isCastSessionAvailable ?? false;
+    developer.log('buildPlayerWithControls $isChromecastSessionActive');
     // ignore: avoid_unnecessary_containers
     return Container(
       child: Stack(
@@ -132,7 +136,7 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
             subtitles: betterPlayerController.subtitlesLines,
             playerVisibilityStream: playerVisibilityStreamController.stream,
           ),
-          if (!placeholderOnTop) _buildPlaceholder(betterPlayerController),
+          if (!placeholderOnTop || isChromecastSessionActive) _buildPlaceholder(betterPlayerController),
           _buildControls(context, betterPlayerController),
         ],
       ),
